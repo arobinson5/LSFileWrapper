@@ -139,9 +139,11 @@
 - (UIImage *)image
 {
     if (content == nil && writtenURL != nil) {
-        content = [UIImage imageWithContentsOfFile:writtenURL.path];
-        cacheFile = YES;
-        return (UIImage *)content;
+        return [UIImage imageWithContentsOfFile:writtenURL.path];
+
+        //content = [UIImage imageWithContentsOfFile:writtenURL.path];
+        //cacheFile = YES;
+        //return (UIImage *)content;
     }
     if ([content isKindOfClass:[NSData class]]) {
         content = [UIImage imageWithData:(NSData *)content];
@@ -149,6 +151,14 @@
     if ([content isKindOfClass:[UIImage class]]) {
         return (UIImage *)content;
     }
+    if ([content isKindOfClass:[NSURL class]]) {
+        return [UIImage imageWithContentsOfFile:[((NSURL *)content) path]];
+
+        //content = [UIImage imageWithContentsOfFile:[((NSURL *)content) path]];
+        //cacheFile = YES;
+        //return (UIImage *)content;
+    }    
+
     return nil;
 }
 
@@ -422,6 +432,14 @@
     return [imageData writeToURL:url options:NSDataWritingAtomic error:outError];
 }
 
+- (BOOL)writeFile:(NSURL *)fromURL toURL:(NSURL *) toURL fileManager:(NSFileManager *)fileManager error:(NSError *__autoreleasing *)outError {
+    
+    if([fileManager fileExistsAtPath:[toURL path]]) {
+        [fileManager removeItemAtURL:toURL error:nil];
+    }
+    return [fileManager copyItemAtURL:fromURL toURL:toURL error:outError];
+}
+
 - (BOOL)getParentUpdates:(NSMutableArray *)updates withURL:(NSURL *)url
 {
     if (!parent) {
@@ -495,6 +513,11 @@
         }
         else if ([fileContent isKindOfClass:[ALAsset class]]) {
             success = [self writeAsset:(ALAsset *)fileContent toURL:fileURL fileManager:fileManager error:outError];
+        }
+        else if ([fileContent isKindOfClass:[NSURL class]] && [((NSURL *)fileContent) isFileURL]) {
+            //NSLog(@"filecontent %@", fileContent);
+            success = [self writeFile:(NSURL *)fileContent toURL:fileURL fileManager:fileManager error:outError];
+            NSLog(@"success %d %@", success, *outError);
         }
         else {
             NSData *data = [NSPropertyListSerialization dataWithPropertyList:fileContent
