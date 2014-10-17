@@ -517,7 +517,10 @@
         else if ([fileContent isKindOfClass:[NSURL class]] && [((NSURL *)fileContent) isFileURL]) {
             //NSLog(@"filecontent %@", fileContent);
             success = [self writeFile:(NSURL *)fileContent toURL:fileURL fileManager:fileManager error:outError];
-            NSLog(@"success %d %@", success, *outError);
+            
+            [fileURL setResourceValue:@(NO) forKey:NSURLIsExcludedFromBackupKey error:nil];
+
+            //NSLog(@"success %d %@", success, *outError);
         }
         else {
             NSData *data = [NSPropertyListSerialization dataWithPropertyList:fileContent
